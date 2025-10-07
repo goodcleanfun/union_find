@@ -1,0 +1,151 @@
+#pragma once
+
+typedef struct union_find_node {
+    int height;
+    int in_degree;
+    void *item;
+    struct union_find_node *up;
+    struct union_find_node *list;
+} union_find_node_t;
+
+#define MEMORY_POOL_NAME union_find_node_memory_pool
+#define MEMORY_POOL_TYPE union_find_node_t
+#include "memory_pool/memory_pool.h"
+#undef MEMORY_POOL_NAME
+#undef MEMORY_POOL_TYPE
+
+typedef struct union_find {
+    union_find_node_memory_pool *node_pool;
+} union_find_t;
+
+
+static union_find_t *union_find_new_pool(union_find_node_memory_pool *pool) {
+    if (pool == NULL) return NULL;
+    union_find_t *uf = calloc(1, sizeof(union_find_t));
+    if (uf == NULL) return NULL;
+    uf->node_pool = pool;
+    return uf;
+}
+
+static union_find_t *union_find_new(void) {
+    union_find_node_memory_pool *pool = union_find_node_memory_pool_new();
+    if (pool == NULL) return NULL;
+    union_find_t *uf = union_find_new_pool(pool);
+    if (uf == NULL) {
+        union_find_node_memory_pool_destroy(pool);
+        return NULL;
+    }
+    return uf;
+}
+
+static union_find_node_t *union_find_insert(union_find_t *uf, void *item) {
+    if (uf == NULL || uf->node_pool == NULL) return NULL;
+    union_find_node_t *node = union_find_node_memory_pool_get(uf->node_pool);
+    node->item = item;
+    node->height = 0;
+    node->in_degree = 0;
+    node->up = NULL;
+    node->list = NULL;
+    return node;
+}
+
+static union_find_node_t *union_find_node_root(union_find_node_t *node) {
+    if (node == NULL) return NULL;
+    union_find_node_t *root;
+    for (root = node; root->up != NULL; root = root->up);
+    return root;
+}
+
+static bool union_find_same_class(union_find_node_t *node1, union_find_node_t *node2) {
+    if (node1 == NULL || node2 == NULL) return false;
+    union_find_node_t *root1 = union_find_node_root(node1);
+    union_find_node_t *root2 = union_find_node_root(node2);
+
+    return root1 == root2;
+}
+
+static void union_find_join(union_find_node_t *node1, union_find_node_t *node2) {
+    if (node1 == NULL || node2 == NULL) return;
+
+    union_find_node_t *root1 = union_find_node_root(node1);
+    union_find_node_t *root2 = union_find_node_root(node2);
+
+    union_find_node_t *tmp;
+    // Make sure root1 is the taller of the two
+    if (root1->height < root2->height) {
+        tmp = root1;
+        root1 = root2;
+        root2 = tmp;
+    }
+
+    if (root1->height >= 2) {
+        // inserting two levels below root 1
+        if (root2->height < root1->height) {
+            tmp = root2->list;
+            // go through list below root2
+            while (tmp != NULL) {
+                // point to node on root1 list
+                tmp->up = root1->list;
+                tmp = tmp->list;
+            }
+            // also point root2 at the list node
+            root2->up = root1->list;
+            // root2->height == root1->height
+        } else {
+            // join root2 list to root1 list, pointing to root1
+            tmp = root2->list;
+            tmp->up = root1;
+            while (tmp->list != NULL) {
+                tmp = tmp->list;
+                // move to end of root 2 list
+                tmp->up = root1;
+            }
+            // join linked lists (tmp is now the end of root2's list)
+            tmp->list = root1->list;
+            root1->list = root2->list;
+            // now lists joined together below root 1, increase its in_degree
+            root1->in_degree += root2->in_degree;
+            if (root1->in_degree <= root1->height) {
+                // point to node on root1 list
+                root2->up = root1->list;
+            } else {
+                // root2 becomes the new root, root1 goes below
+                root1->up = root2;
+                root1->list = NULL;
+                root2->height++;
+                root2->in_degree = 1;
+                root2->list = root1;
+            }
+        }
+    // root1->height <= 1
+    } else {
+        if (root1->height == 0) {
+            root1->height = 1;
+            root1->in_degree = 1;
+            root1->list = root2;
+            // root1 is the new root
+            root2->up = root1;
+        } else { // root1->height == 1
+            // any root at height 1 has exactly one lower neighbor
+            if (root2->height == 1) {
+                // both height 1
+                root2->list->up = root1;
+            }
+            // make root1 lower neighbor of root2
+            root2->height = 2;
+            root2->in_degree = 1;
+            root2->list = root1;
+            root1->list = NULL;
+            // root2 is the new root
+            root1->up = root2;
+        }
+    }
+}
+
+static void union_find_destroy(union_find_t *uf) {
+    if (uf == NULL) return;
+    if (uf->node_pool != NULL) {
+        union_find_node_memory_pool_destroy(uf->node_pool);
+    }
+    free(uf);
+}
