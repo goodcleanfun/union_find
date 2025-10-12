@@ -1,6 +1,6 @@
 {
     "name": "union_find",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "repo": "goodcleanfun/union_find",
     "description": "Union-find data structure useful in Kruskal's minimum spanning tree algorithm",
     "keywords": ["union find", "disjoint set", "data structure", "kruskal", "minimum spanning tree"],
