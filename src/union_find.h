@@ -79,8 +79,27 @@ static void union_find_join(union_find_node_t *node1, union_find_node_t *node2) 
     }
 
     if (root1->height >= 2) {
-        // inserting two levels below root 1
+        /*
+        Assuming heights of at least 2 for both roots,
+
+              r                   s
+           / /  \ \      +      / | \
+          a b    c d           x  y  z
+          ^ ^    ^ ^           ^  ^  ^
+        */
+
         if (root2->height < root1->height) {
+            /*
+            Inserting two levels below root 1. Point all lower neighbors of root2,
+            and root2 itself, to root1's list (lower neighbor).
+
+                  r -------
+              /  / \ \    |
+             a<-b<--c<-d<--
+                      //\\
+                    x y z s
+            */
+
             tmp = root2->list;
             // go through list below root2
             while (tmp != NULL) {
@@ -92,7 +111,17 @@ static void union_find_join(union_find_node_t *node1, union_find_node_t *node2) 
             root2->parent = root1->list;
             // root2->height == root1->height
         } else {
-            // join root2 list to root1 list, pointing to root1
+            /*
+            Join lower neighbor lists and point all lower neighbors of root2 to root1
+
+                      r ----------
+             /  /  / / \ \ \     |
+            a<-b<-c<-d<-x<-y<-z<--
+
+            Note in this implementation we only need to maintain the list and in_degree
+            for the root node of a tree, so we can just leave that metadata
+            */
+
             tmp = root2->list;
             tmp->parent = root1;
             while (tmp->list != NULL) {
@@ -106,10 +135,24 @@ static void union_find_join(union_find_node_t *node1, union_find_node_t *node2) 
             // now lists joined together below root 1, increase its in_degree
             root1->in_degree += root2->in_degree;
             if (root1->in_degree <= root1->height) {
-                // point to node on root1 list
+                /*
+                point root2 to node on root1 list
+                         r -----------
+                /  /  / /  \  \  \   |
+                a<-b<-c<-d<-x<-y<-z<--
+                                   \
+                                    s
+                */
                 root2->parent = root1->list;
             } else {
-                // root2 becomes the new root, root1 goes below
+                /*
+                root2 becomes the new root, root 1 goes below
+                         s----
+                             |
+                         r<---
+                /  /  / /  \  \  \
+                a<-b<-c<-d<-x<-y<-z
+                */
                 root1->parent = root2;
                 root1->list = NULL;
                 root2->height++;
