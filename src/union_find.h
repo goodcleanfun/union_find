@@ -5,8 +5,8 @@
 #include <stdlib.h>
 
 typedef struct union_find_node {
-    int height;
-    int in_degree;
+    uint64_t height:8;
+    uint64_t in_degree:56;
     void *item;
     struct union_find_node *parent;
     struct union_find_node *list;
