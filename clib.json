@@ -1,0 +1,17 @@
+{
+    "name": "union_find",
+    "version": "0.0.0",
+    "repo": "goodcleanfun/union_find",
+    "description": "Union-find data structure useful in Kruskal's minimum spanning tree algorithm",
+    "keywords": ["union find", "disjoint set", "data structure", "kruskal", "minimum spanning tree"],
+    "license": "MIT",
+    "development": {
+        "silentbicycle/greatest": "*"
+    },
+    "dependencies": {
+        "goodcleanfun/memory_pool": "*"
+    },
+    "src": [
+        "src/union_find.h"
+    ]
+}
