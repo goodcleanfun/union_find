@@ -69,6 +69,7 @@ static void union_find_join(union_find_node_t *node1, union_find_node_t *node2) 
 
     union_find_node_t *root1 = union_find_node_root(node1);
     union_find_node_t *root2 = union_find_node_root(node2);
+    if (root1 == root2) return; // Already in the same class
 
     union_find_node_t *tmp;
     // Make sure root1 is the taller of the two
