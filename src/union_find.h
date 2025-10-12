@@ -1,5 +1,9 @@
 #pragma once
 
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdlib.h>
+
 typedef struct union_find_node {
     int height;
     int in_degree;
