@@ -4,7 +4,7 @@ typedef struct union_find_node {
     int height;
     int in_degree;
     void *item;
-    struct union_find_node *up;
+    struct union_find_node *parent;
     struct union_find_node *list;
 } union_find_node_t;
 
@@ -44,7 +44,7 @@ static union_find_node_t *union_find_insert(union_find_t *uf, void *item) {
     node->item = item;
     node->height = 0;
     node->in_degree = 0;
-    node->up = NULL;
+    node->parent = NULL;
     node->list = NULL;
     return node;
 }
@@ -52,7 +52,7 @@ static union_find_node_t *union_find_insert(union_find_t *uf, void *item) {
 static union_find_node_t *union_find_node_root(union_find_node_t *node) {
     if (node == NULL) return NULL;
     union_find_node_t *root;
-    for (root = node; root->up != NULL; root = root->up);
+    for (root = node; root->parent != NULL; root = root->parent);
     return root;
 }
 
@@ -85,20 +85,20 @@ static void union_find_join(union_find_node_t *node1, union_find_node_t *node2) 
             // go through list below root2
             while (tmp != NULL) {
                 // point to node on root1 list
-                tmp->up = root1->list;
+                tmp->parent = root1->list;
                 tmp = tmp->list;
             }
             // also point root2 at the list node
-            root2->up = root1->list;
+            root2->parent = root1->list;
             // root2->height == root1->height
         } else {
             // join root2 list to root1 list, pointing to root1
             tmp = root2->list;
-            tmp->up = root1;
+            tmp->parent = root1;
             while (tmp->list != NULL) {
                 tmp = tmp->list;
                 // move to end of root 2 list
-                tmp->up = root1;
+                tmp->parent = root1;
             }
             // join linked lists (tmp is now the end of root2's list)
             tmp->list = root1->list;
@@ -107,10 +107,10 @@ static void union_find_join(union_find_node_t *node1, union_find_node_t *node2) 
             root1->in_degree += root2->in_degree;
             if (root1->in_degree <= root1->height) {
                 // point to node on root1 list
-                root2->up = root1->list;
+                root2->parent = root1->list;
             } else {
                 // root2 becomes the new root, root1 goes below
-                root1->up = root2;
+                root1->parent = root2;
                 root1->list = NULL;
                 root2->height++;
                 root2->in_degree = 1;
@@ -124,12 +124,12 @@ static void union_find_join(union_find_node_t *node1, union_find_node_t *node2) 
             root1->in_degree = 1;
             root1->list = root2;
             // root1 is the new root
-            root2->up = root1;
+            root2->parent = root1;
         } else { // root1->height == 1
             // any root at height 1 has exactly one lower neighbor
             if (root2->height == 1) {
                 // both height 1
-                root2->list->up = root1;
+                root2->list->parent = root1;
             }
             // make root1 lower neighbor of root2
             root2->height = 2;
@@ -137,7 +137,7 @@ static void union_find_join(union_find_node_t *node1, union_find_node_t *node2) 
             root2->list = root1;
             root1->list = NULL;
             // root2 is the new root
-            root1->up = root2;
+            root1->parent = root2;
         }
     }
 }
